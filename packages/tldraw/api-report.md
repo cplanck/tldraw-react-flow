@@ -46,6 +46,7 @@ import { SharedStyle } from '@tldraw/editor';
 import { StateNode } from '@tldraw/editor';
 import { StyleProp } from '@tldraw/editor';
 import { SvgExportContext } from '@tldraw/editor';
+import { T } from '@tldraw/editor';
 import { TLAnyBindingUtilConstructor } from '@tldraw/editor';
 import { TLAnyShapeUtilConstructor } from '@tldraw/editor';
 import { TLArrowBinding } from '@tldraw/editor';
@@ -55,6 +56,7 @@ import { TLArrowShapeArrowheadStyle } from '@tldraw/editor';
 import { TLArrowShapeProps } from '@tldraw/editor';
 import { TLAsset } from '@tldraw/editor';
 import { TLAssetId } from '@tldraw/editor';
+import { TLBaseShape } from '@tldraw/editor';
 import { TLBookmarkShape } from '@tldraw/editor';
 import { TLBookmarkShapeProps } from '@tldraw/editor';
 import { TLClickEventInfo } from '@tldraw/editor';
@@ -382,11 +384,103 @@ export function ClipboardMenuGroup(): JSX_2.Element;
 // @public (undocumented)
 export function CloudToolbarItem(): JSX_2.Element;
 
+// @alpha (undocumented)
+export type CodeBlockShape = TLBaseShape<'codeBlock', {
+    color: string;
+    h: number;
+    text: string;
+    w: number;
+}>;
+
+// @alpha (undocumented)
+export class CodeBlockShapeUtil extends BaseBoxShapeUtil<CodeBlockShape> {
+    // (undocumented)
+    component(shape: CodeBlockShape): JSX_2.Element;
+    // (undocumented)
+    getDefaultProps(): CodeBlockShape['props'];
+    // (undocumented)
+    indicator(shape: CodeBlockShape): JSX_2.Element;
+    // (undocumented)
+    static props: {
+        color: T.Validator<string>;
+        h: T.Validator<number>;
+        text: T.Validator<string>;
+        w: T.Validator<number>;
+    };
+    // (undocumented)
+    static type: "codeBlock";
+}
+
+// @alpha (undocumented)
+export class CodeBlockTool extends StateNode {
+    // (undocumented)
+    static children: () => never[];
+    // (undocumented)
+    static id: string;
+    // (undocumented)
+    static initial: string;
+    // (undocumented)
+    onEnter(): void;
+    // (undocumented)
+    onPointerDown(): void;
+    // (undocumented)
+    shapeType: string;
+}
+
+// @alpha (undocumented)
+export const codeBlockUiOverrides: TLUiOverrides;
+
 // @public (undocumented)
 export function ColorSchemeMenu(): JSX_2.Element;
 
 // @public (undocumented)
 export function CommonStylePickerSet({ styles, theme }: ThemeStylePickerSetProps): JSX_2.Element;
+
+// @alpha (undocumented)
+export const components: TLComponents;
+
+// @alpha (undocumented)
+export type ConnectableShape = TLBaseShape<'connectable', {
+    color: string;
+    h: number;
+    text: string;
+    w: number;
+}>;
+
+// @alpha (undocumented)
+export class ConnectableShapeUtil extends BaseBoxShapeUtil<ConnectableShape> {
+    // (undocumented)
+    component(shape: ConnectableShape): JSX_2.Element;
+    // (undocumented)
+    getDefaultProps(): ConnectableShape['props'];
+    // (undocumented)
+    indicator(shape: ConnectableShape): JSX_2.Element;
+    // (undocumented)
+    static props: {
+        color: T.Validator<string>;
+        h: T.Validator<number>;
+        text: T.Validator<string>;
+        w: T.Validator<number>;
+    };
+    // (undocumented)
+    static type: "connectable";
+}
+
+// @alpha (undocumented)
+export class ConnectableTool extends StateNode {
+    // (undocumented)
+    static children: () => never[];
+    // (undocumented)
+    static id: string;
+    // (undocumented)
+    static initial: string;
+    // (undocumented)
+    onEnter(): void;
+    // (undocumented)
+    onPointerDown(): void;
+    // (undocumented)
+    shapeType: string;
+}
 
 // @public
 export function containBoxSize(originalSize: BoxWidthHeight, containBoxSize: BoxWidthHeight): BoxWidthHeight;
