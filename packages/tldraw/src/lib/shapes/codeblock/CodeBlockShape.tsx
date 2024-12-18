@@ -1,11 +1,4 @@
-// packages/tldraw/src/lib/shapes/connectable/ConnectableShape.tsx
-import {
-	BaseBoxShapeUtil,
-	HTMLContainer,
-	T,
-	TLBaseShape,
-	getDefaultColorTheme,
-} from '@tldraw/editor'
+import { BaseBoxShapeUtil, HTMLContainer, T, TLBaseShape } from '@tldraw/editor'
 
 /**
  * @alpha
@@ -15,21 +8,18 @@ export type CodeBlockShape = TLBaseShape<
 	{
 		w: number
 		h: number
-		color: string
 		text: string
 	}
 >
-
 /**
  * @alpha
  */
 export class CodeBlockShapeUtil extends BaseBoxShapeUtil<CodeBlockShape> {
-	static override type = 'codeBlock' as const
+	static override type = 'codeBlock'
 
 	static override props = {
 		w: T.number,
 		h: T.number,
-		color: T.string,
 		text: T.string,
 	}
 
@@ -37,34 +27,82 @@ export class CodeBlockShapeUtil extends BaseBoxShapeUtil<CodeBlockShape> {
 		return {
 			w: 200,
 			h: 100,
-			color: 'light-blue',
-			text: 'Code Block Node',
+			text: 'Code Block',
 		}
 	}
 
-	component(shape: CodeBlockShape) {
-		const theme = getDefaultColorTheme({ isDarkMode: false })
+	getHandlesCoordinates = () => {
+		console.log('hello')
+	}
 
+	component(shape: CodeBlockShape) {
 		return (
 			<HTMLContainer
-				id={shape.id}
 				style={{
+					position: 'relative',
+					width: shape.props.w,
+					height: shape.props.h,
 					border: '2px solid black',
+					backgroundColor: 'white',
 					borderRadius: '4px',
 					display: 'flex',
 					alignItems: 'center',
 					justifyContent: 'center',
-					// backgroundColor: shape.props.color,
-					backgroundColor: 'white',
-					color: theme.text,
+					cursor: 'crosshair',
 				}}
 			>
 				{shape.props.text}
+
+				{/* Top Handle */}
+				<div
+					data-handle="top"
+					id={`handle-top-${shape.id}`}
+					style={{
+						position: 'absolute',
+						top: '-8px',
+						left: '50%',
+						transform: 'translateX(-50%)',
+						width: '10px',
+						height: '10px',
+						backgroundColor: 'blue',
+						borderRadius: '50%',
+						pointerEvents: 'auto',
+						cursor: 'crosshair',
+					}}
+				/>
+
+				{/* Bottom Handle */}
+				<div
+					data-handle="bottom"
+					id={`handle-bottom-${shape.id}`}
+					style={{
+						position: 'absolute',
+						bottom: '-8px',
+						left: '50%',
+						transform: 'translateX(-50%)',
+						width: '10px',
+						height: '10px',
+						backgroundColor: 'blue',
+						borderRadius: '50%',
+						pointerEvents: 'auto',
+						cursor: 'crosshair',
+					}}
+				/>
 			</HTMLContainer>
 		)
 	}
 
 	indicator(shape: CodeBlockShape) {
-		return <rect width={shape.props.w} height={shape.props.h} rx={4} ry={4} />
+		return (
+			<rect
+				width={shape.props.w}
+				height={shape.props.h}
+				rx={4}
+				ry={4}
+				stroke="blue"
+				strokeWidth={1}
+				fill="none"
+			/>
+		)
 	}
 }

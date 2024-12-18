@@ -24,7 +24,6 @@ export class CodeBlockTool extends StateNode {
 			x: currentPagePoint.x - 100,
 			y: currentPagePoint.y - 50,
 			props: {
-				// color: 'white',
 				text: 'New Code Block',
 			},
 		})

@@ -386,7 +386,6 @@ export function CloudToolbarItem(): JSX_2.Element;
 
 // @alpha (undocumented)
 export type CodeBlockShape = TLBaseShape<'codeBlock', {
-    color: string;
     h: number;
     text: string;
     w: number;
@@ -399,16 +398,17 @@ export class CodeBlockShapeUtil extends BaseBoxShapeUtil<CodeBlockShape> {
     // (undocumented)
     getDefaultProps(): CodeBlockShape['props'];
     // (undocumented)
+    getHandlesCoordinates: () => void;
+    // (undocumented)
     indicator(shape: CodeBlockShape): JSX_2.Element;
     // (undocumented)
     static props: {
-        color: T.Validator<string>;
         h: T.Validator<number>;
         text: T.Validator<string>;
         w: T.Validator<number>;
     };
     // (undocumented)
-    static type: "codeBlock";
+    static type: string;
 }
 
 // @alpha (undocumented)
