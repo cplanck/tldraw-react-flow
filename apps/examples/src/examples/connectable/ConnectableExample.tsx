@@ -5,18 +5,26 @@ import {
 	ConnectableShapeUtil,
 	ConnectableTool,
 	IndexKey,
+	TLShapeId,
 	Tldraw,
 	codeBlockUiOverrides,
 	components,
+	createBindingId,
 	createShapeId,
 	useEditor,
 } from 'tldraw'
-import { CodeBlockConnectorShape } from 'tldraw/src/lib/shapes/codeblock/CodeBlockConnectorShape'
+
+import { ConnectorBindingUtil } from 'tldraw/src/lib/shapes/codeblock/CodeBlockBinding'
+import {
+	CodeBlockConnectorShape,
+	CodeBlockConnectorUtil,
+} from 'tldraw/src/lib/shapes/codeblock/CodeBlockConnectorShape'
 import { CodeBlockShape } from 'tldraw/src/lib/shapes/codeblock/CodeBlockShape'
 import { customAssetUrls2 } from 'tldraw/src/lib/ui/custom/code-block-ui'
 import { v4 as uuidv4 } from 'uuid'
 const customTools = [ConnectableTool, CodeBlockTool]
-const shapeUtils = [ConnectableShapeUtil, CodeBlockShapeUtil]
+const shapeUtils = [ConnectableShapeUtil, CodeBlockShapeUtil, CodeBlockConnectorUtil]
+const bindingUtils = [ConnectorBindingUtil]
 
 function ConnectableCanvas() {
 	const editor = useEditor()
@@ -31,9 +39,11 @@ function ConnectableCanvas() {
 			const pointerX = editor.inputs.currentPagePoint.x
 			const pointerY = editor.inputs.currentPagePoint.y
 
+			const connectordId = createShapeId(uuidv4())
+
 			const newConnector: CodeBlockConnectorShape = {
-				id: createShapeId(uuidv4()),
-				type: 'arrow',
+				id: connectordId,
+				type: 'connector',
 				x: 0,
 				y: 0,
 				rotation: 0,
@@ -57,18 +67,32 @@ function ConnectableCanvas() {
 			}
 			editor.createShape(newConnector)
 			setCurrentArrow(newConnector)
+			return [shapeId, connectordId]
 		}
+		return null
+	}
+
+	const addBinding = (shapeId: TLShapeId, connectorId: TLShapeId, position: 'top' | 'bottom') => {
+		console.log('Creating binding')
+
+		editor.createBinding({
+			id: createBindingId(uuidv4()),
+			type: 'connector',
+			fromId: connectorId,
+			toId: shapeId,
+			props: {
+				terminal: 'start',
+				isPrecise: true,
+				normalizedAnchor: { x: 0.5, y: position === 'top' ? 0 : 1 },
+			},
+			meta: {},
+			typeName: 'binding',
+		})
+		console.log('BINDING ADDED')
 	}
 
 	useEffect(() => {
 		const handlePointerMove = (e: PointerEvent) => {
-			console.log(
-				'EDITOR PAGE POINTS',
-				editor.inputs.currentPagePoint.x,
-				editor.inputs.currentPagePoint.y
-			)
-			console.log('EVENT POINTS', e.clientX, e.clientY)
-
 			if (currentArrow) {
 				const newEnd = {
 					x: editor.inputs.currentPagePoint.x,
@@ -101,7 +125,6 @@ function ConnectableCanvas() {
 						y: editor.inputs.currentPagePoint.y,
 					}
 
-					// Update the current arrow's end position
 					editor.updateShape({
 						...currentArrow,
 						props: {
@@ -110,8 +133,13 @@ function ConnectableCanvas() {
 						},
 					})
 				} else {
-					// Start creating a new connector
-					addConnector(handle, target.id.split(':')[1])
+					const ids = addConnector(handle, target.id.split(':')[1])
+					if (ids) {
+						const [shapeId, connectorId] = ids
+						if (shapeId && connectorId) {
+							addBinding(shapeId, connectorId, handle)
+						}
+					}
 				}
 			} else {
 				setCurrentArrow(null)
@@ -139,6 +167,7 @@ export default function ConnectableExample() {
 			<Tldraw
 				tools={customTools}
 				shapeUtils={shapeUtils}
+				bindingUtils={bindingUtils}
 				overrides={codeBlockUiOverrides}
 				components={components}
 				assetUrls={customAssetUrls2}
