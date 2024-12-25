@@ -38,7 +38,7 @@ export class ConnectorBindingUtil extends BindingUtil<ConnectorBinding> {
 		return {
 			terminal: 'start' as const,
 			isPrecise: true,
-			normalizedAnchor: { x: 0.5, y: 0.5 },
+			// normalizedAnchor: { x: 0.5, y: 0.5 },
 		}
 	}
 
@@ -49,6 +49,7 @@ export class ConnectorBindingUtil extends BindingUtil<ConnectorBinding> {
 		const connector = this.editor.getShape(binding.fromId)!
 
 		const shapeBounds = this.editor.getShapeGeometry(shapeAfter)!.bounds
+		console.log(shapeBounds)
 		const newAnchorPoint = {
 			x: lerp(shapeBounds.minX, shapeBounds.maxX, binding.props.normalizedAnchor.x),
 			y: lerp(shapeBounds.minY, shapeBounds.maxY, binding.props.normalizedAnchor.y),
@@ -60,17 +61,23 @@ export class ConnectorBindingUtil extends BindingUtil<ConnectorBinding> {
 			.invert()
 			.applyToPoint(pageAnchor)
 
-		this.editor.updateShape({
-			id: connector.id,
-			type: 'connector',
-			props: {
-				...connector.props,
-				start: {
-					x: parentAnchor.x,
-					y: parentAnchor.y,
+		console.log('parentAnchor', parentAnchor)
+
+		if (this.editor.getSelectedShapeIds().includes(connector.id)) {
+			return
+		} else {
+			this.editor.updateShape({
+				id: connector.id,
+				type: 'connector',
+				props: {
+					...connector.props,
+					start: {
+						x: parentAnchor.x,
+						y: parentAnchor.y,
+					},
 				},
-			},
-		})
+			})
+		}
 	}
 
 	override onBeforeDeleteToShape({ binding }: BindingOnShapeDeleteOptions<ConnectorBinding>): void {
