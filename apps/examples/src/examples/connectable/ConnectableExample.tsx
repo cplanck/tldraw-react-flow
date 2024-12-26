@@ -157,7 +157,20 @@ function ConnectableCanvas() {
 			if (currentArrow) {
 				const hoveredShape = editor.getShapesAtPoint(editor.inputs.currentPagePoint)[0]
 				if (hoveredShape?.type === 'codeBlock') {
-					// Create binding to the hovered shape
+					// Calculate the top middle position of the hovered shape
+					const topMiddleX = hoveredShape.x + hoveredShape.props.w / 2
+					const topMiddleY = hoveredShape.y
+
+					// Update the connector end point
+					editor.updateShape({
+						...currentArrow,
+						props: {
+							...currentArrow.props,
+							end: { x: topMiddleX, y: topMiddleY },
+						},
+					})
+
+					// Create binding
 					editor.createBinding({
 						id: createBindingId(uuidv4()),
 						type: 'connector',
@@ -166,7 +179,7 @@ function ConnectableCanvas() {
 						props: {
 							terminal: 'end',
 							isPrecise: true,
-							normalizedAnchor: { x: 0.5, y: 0.5 }, // Center of the shape
+							normalizedAnchor: { x: 0.5, y: 0 },
 						},
 						meta: {},
 						typeName: 'binding',
