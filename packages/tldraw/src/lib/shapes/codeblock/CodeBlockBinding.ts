@@ -4,7 +4,6 @@ import {
 	BindingUtil,
 	T,
 	TLBaseBinding,
-	lerp,
 } from 'tldraw'
 
 export interface ConnectorBinding extends TLBaseBinding<'connector', ConnectorBindingProps> {
@@ -47,37 +46,30 @@ export class ConnectorBindingUtil extends BindingUtil<ConnectorBinding> {
 		shapeAfter,
 	}: BindingOnShapeChangeOptions<ConnectorBinding>): void {
 		const connector = this.editor.getShape(binding.fromId)!
+		const shapeBounds = this.editor.getShapeGeometry(shapeAfter).bounds
 
-		const shapeBounds = this.editor.getShapeGeometry(shapeAfter)!.bounds
-		console.log(shapeBounds)
-		const newAnchorPoint = {
-			x: lerp(shapeBounds.minX, shapeBounds.maxX, binding.props.normalizedAnchor.x),
-			y: lerp(shapeBounds.minY, shapeBounds.maxY, binding.props.normalizedAnchor.y),
+		// Calculate new connection point based on normalized anchor
+		const newPoint = {
+			x: shapeBounds.minX + shapeBounds.width * binding.props.normalizedAnchor.x,
+			y: shapeBounds.minY + shapeBounds.height * binding.props.normalizedAnchor.y,
 		}
 
-		const pageAnchor = this.editor.getShapePageTransform(shapeAfter).applyToPoint(newAnchorPoint)
-		const parentAnchor = this.editor
+		// Transform point to connector's coordinate space
+		const pagePoint = this.editor.getShapePageTransform(shapeAfter).applyToPoint(newPoint)
+		const localPoint = this.editor
 			.getShapeParentTransform(connector)
 			.invert()
-			.applyToPoint(pageAnchor)
+			.applyToPoint(pagePoint)
 
-		console.log('parentAnchor', parentAnchor)
-
-		if (this.editor.getSelectedShapeIds().includes(connector.id)) {
-			return
-		} else {
-			this.editor.updateShape({
-				id: connector.id,
-				type: 'connector',
-				props: {
-					...connector.props,
-					start: {
-						x: parentAnchor.x,
-						y: parentAnchor.y,
-					},
-				},
-			})
-		}
+		// Update the appropriate end of the connector with a serializable point
+		this.editor.updateShape({
+			id: connector.id,
+			type: 'connector',
+			props: {
+				...connector.props,
+				[binding.props.terminal]: { x: localPoint.x, y: localPoint.y },
+			},
+		})
 	}
 
 	override onBeforeDeleteToShape({ binding }: BindingOnShapeDeleteOptions<ConnectorBinding>): void {

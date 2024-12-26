@@ -99,6 +99,13 @@ function ConnectableCanvas() {
 					y: editor.inputs.currentPagePoint.y,
 				}
 
+				// Check if we're hovering over a code block shape
+				const hoveredShape = editor.getShapesAtPoint(editor.inputs.currentPagePoint)[0]
+				if (hoveredShape?.type === 'codeBlock') {
+					console.log('Hovering over code block:', hoveredShape.id)
+					// You can add visual feedback here, like highlighting the shape
+				}
+
 				editor.updateShape({
 					...currentArrow,
 					props: {
@@ -146,15 +153,38 @@ function ConnectableCanvas() {
 			}
 		}
 
+		const handlePointerUp = (e: PointerEvent) => {
+			if (currentArrow) {
+				const hoveredShape = editor.getShapesAtPoint(editor.inputs.currentPagePoint)[0]
+				if (hoveredShape?.type === 'codeBlock') {
+					// Create binding to the hovered shape
+					editor.createBinding({
+						id: createBindingId(uuidv4()),
+						type: 'connector',
+						fromId: currentArrow.id,
+						toId: hoveredShape.id,
+						props: {
+							terminal: 'end',
+							isPrecise: true,
+							normalizedAnchor: { x: 0.5, y: 0.5 }, // Center of the shape
+						},
+						meta: {},
+						typeName: 'binding',
+					})
+				}
+				setCurrentArrow(null)
+			}
+		}
+
 		const container = editor.getContainer()
 		container.addEventListener('pointermove', handlePointerMove)
 		container.addEventListener('pointerdown', handlePointerDown)
-		// container.addEventListener('pointerup', handlePointerUp)
+		container.addEventListener('pointerup', handlePointerUp)
 
 		return () => {
 			container.removeEventListener('pointermove', handlePointerMove)
 			container.removeEventListener('pointerdown', handlePointerDown)
-			// container.removeEventListener('pointerup', handlePointerUp)
+			container.removeEventListener('pointerup', handlePointerUp)
 		}
 	}, [editor, currentArrow])
 
