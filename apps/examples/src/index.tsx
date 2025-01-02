@@ -12,6 +12,7 @@ import {
 import { ExamplePage } from './ExamplePage'
 import { ExampleWrapper } from './ExampleWrapper'
 import { examples } from './examples'
+import ConnectableExample from './examples/connectable/ConnectableExample'
 import Develop from './misc/develop'
 import EndToEnd from './misc/end-to-end'
 
@@ -85,6 +86,10 @@ const router = createBrowserRouter([
 			},
 		])
 	),
+	{
+		path: 'connectable',
+		lazy: async () => ({ element: <ConnectableExample /> }),
+	},
 ])
 
 function NoIndex({ children }: { children: React.ReactNode }) {

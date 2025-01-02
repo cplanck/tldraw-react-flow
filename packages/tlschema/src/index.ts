@@ -12,6 +12,7 @@ export { assetIdValidator, createAssetValidator, type TLBaseAsset } from './asse
 export { type TLBookmarkAsset } from './assets/TLBookmarkAsset'
 export { type TLImageAsset } from './assets/TLImageAsset'
 export { type TLVideoAsset } from './assets/TLVideoAsset'
+export * from './bindings/ConnectorBinding'
 export {
 	arrowBindingMigrations,
 	arrowBindingProps,
@@ -128,6 +129,7 @@ export {
 	type TLPropsMigration,
 	type TLPropsMigrations,
 } from './recordsWithProps'
+export * from './shapes/ConnectorShape'
 export {
 	ArrowShapeArrowheadEndStyle,
 	ArrowShapeArrowheadStartStyle,

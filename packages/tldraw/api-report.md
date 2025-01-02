@@ -17,6 +17,8 @@ import { BindingUtil } from '@tldraw/editor';
 import { Box } from '@tldraw/editor';
 import { Circle2d } from '@tldraw/editor';
 import { ComponentType } from 'react';
+import { ConnectorShape } from '@tldraw/editor';
+import { ConnectorShapeProps } from '@tldraw/editor';
 import { CubicSpline2d } from '@tldraw/editor';
 import { Editor } from '@tldraw/editor';
 import { Geometry2d } from '@tldraw/editor';
@@ -478,6 +480,83 @@ export class ConnectableTool extends StateNode {
     onEnter(): void;
     // (undocumented)
     onPointerDown(): void;
+    // (undocumented)
+    shapeType: string;
+}
+
+// @alpha (undocumented)
+export class ConnectorShapeUtil extends ShapeUtil<ConnectorShape> {
+    // (undocumented)
+    canBeLaidOut(shape: ConnectorShape): boolean;
+    // (undocumented)
+    canBind({ toShapeType }: TLShapeUtilCanBindOpts<ConnectorShape>): boolean;
+    // (undocumented)
+    canEdit(): boolean;
+    // (undocumented)
+    canSnap(): boolean;
+    // (undocumented)
+    component(shape: ConnectorShape): JSX_2.Element | null;
+    // (undocumented)
+    getCanvasSvgDefs(): TLShapeUtilCanvasSvgDef[];
+    // (undocumented)
+    getDefaultProps(): ConnectorShape['props'];
+    // (undocumented)
+    getGeometry(shape: ConnectorShape): Group2d;
+    // (undocumented)
+    getHandles(shape: ConnectorShape): TLHandle[];
+    // (undocumented)
+    getInterpolatedProps(startShape: ConnectorShape, endShape: ConnectorShape, progress: number): ConnectorShapeProps;
+    // (undocumented)
+    getText(shape: ConnectorShape): string;
+    // (undocumented)
+    hideResizeHandles(): boolean;
+    // (undocumented)
+    hideRotateHandle(): boolean;
+    // (undocumented)
+    hideSelectionBoundsBg(): boolean;
+    // (undocumented)
+    hideSelectionBoundsFg(): boolean;
+    // (undocumented)
+    indicator(shape: ConnectorShape): JSX_2.Element | null;
+    // (undocumented)
+    onDoubleClickHandle(shape: ConnectorShape, handle: TLHandle): TLShapePartial<ConnectorShape> | void;
+    // (undocumented)
+    onEditEnd(shape: ConnectorShape): void;
+    // (undocumented)
+    onHandleDrag(shape: ConnectorShape, { handle, isPrecise }: TLHandleDragInfo<ConnectorShape>): {
+        id: TLShapeId;
+        meta?: Partial<JsonObject> | undefined;
+        props?: Partial<ConnectorShapeProps> | undefined;
+        type: "connector";
+    } & Partial<Omit<ConnectorShape, "id" | "meta" | "props" | "type">>;
+    // (undocumented)
+    onResize(shape: ConnectorShape, info: TLResizeInfo<ConnectorShape>): {
+        props: {
+            bend: number;
+            end: VecModel;
+            start: VecModel;
+        };
+    };
+    // (undocumented)
+    onTranslate(initialShape: ConnectorShape, shape: ConnectorShape): void;
+    // (undocumented)
+    onTranslateStart(shape: ConnectorShape): void;
+    // (undocumented)
+    static props: RecordProps<TLArrowShape>;
+    // (undocumented)
+    toSvg(shape: ConnectorShape, ctx: SvgExportContext): JSX_2.Element;
+    // (undocumented)
+    static type: "connector";
+}
+
+// @public (undocumented)
+export class ConnectorTool extends StateNode {
+    // (undocumented)
+    static children(): TLStateNodeConstructor[];
+    // (undocumented)
+    static id: string;
+    // (undocumented)
+    static initial: string;
     // (undocumented)
     shapeType: string;
 }

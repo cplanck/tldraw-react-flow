@@ -14,6 +14,7 @@ export const customAssetUrls2: TLUiAssetUrlOverrides = {
 	icons: {
 		'code-block-icon': '/code-block-icon.svg',
 		'connectable-icon': '/connectable-icon.svg',
+		'connector-icon': '/connector-icon.svg',
 	},
 }
 
@@ -34,17 +35,17 @@ export const codeBlockUiOverrides: TLUiOverrides = {
 		}
 		tools.codeBlock = codeBlockTool
 
-		const connectableTool: TLUiToolItem = {
-			id: 'connectable',
-			icon: 'connectable-icon',
-			label: 'Connectable Node',
-			kbd: 'm',
+		const connectorTool: TLUiToolItem = {
+			id: 'connector',
+			icon: 'connector-icon',
+			label: 'Code Block Connector',
+			kbd: 'c',
 			readonlyOk: false,
 			onSelect: () => {
-				editor.setCurrentTool('connectable')
+				editor.setCurrentTool('connector')
 			},
 		}
-		tools.connectable = connectableTool
+		tools.connector = connectorTool
 
 		return tools
 	},
@@ -57,12 +58,12 @@ export const components: TLComponents = {
 	Toolbar: (props) => {
 		const tools = useTools()
 		const isCodeBlockSelected = useIsToolSelected(tools['codeBlock'])
-		const isConnectableSelected = useIsToolSelected(tools['connectable'])
+		const isConnectorSelected = useIsToolSelected(tools['connector'])
 
 		return (
 			<DefaultToolbar {...props}>
 				<TldrawUiMenuItem {...tools['codeBlock']} isSelected={isCodeBlockSelected} />
-				<TldrawUiMenuItem {...tools['connectable']} isSelected={isConnectableSelected} />
+				<TldrawUiMenuItem {...tools['connector']} isSelected={isConnectorSelected} />
 				<DefaultToolbarContent />
 			</DefaultToolbar>
 		)

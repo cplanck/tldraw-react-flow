@@ -1,12 +1,15 @@
 ---
-title: Connectable
+title: Connectable Example
 component: ./ConnectableExample.tsx
-category: shapes/tools
-priority: 1
-description: A custom tool for creating connectable nodes
-hide: false
+category: ui
+priority: 2
+keywords: [in front of the canvas, contextual]
 ---
 
-# Connectable Example
+Show a contextual toolbar above the shapes when they are selected.
 
-This example shows how to create a custom tool with UI components that allows creating connectable nodes. 
+---
+
+An example of how to show a contextual toolbar which appears on top of the selected shapes. It is displayed above the canvas, but below other UI elements.
+
+Select shapes of different types and adjust the size of the shapes - this works just like adjusting the size from the Style panel on the right side.

@@ -510,12 +510,17 @@ export {
 } from './lib/utils/tldr/file'
 
 // export { connectableUiOverrides, components } from './lib/ui/connectable/connectable-ui'
-export { CodeBlockShapeUtil, type CodeBlockShape } from './lib/shapes/codeblock'
-export { ConnectableShapeUtil, type ConnectableShape } from './lib/shapes/connectable'
-export { ConnectableTool } from './lib/tools/ConnectableTool/ConnectableTool'
+// export { type ConnectorShape } from './lib/shapes/connector/ConnectorShape'
+
 export { codeBlockUiOverrides, components } from './lib/ui/custom/code-block-ui'
 
 export { CodeBlockTool } from './lib/tools/CodeBlockTool/CodeBlockTool'
+export { ConnectableTool } from './lib/tools/ConnectableTool/ConnectableTool'
+export { ConnectorTool } from './lib/tools/ConnectorTool/ConnectorTool'
+
+export { CodeBlockShapeUtil, type CodeBlockShape } from './lib/shapes/codeblock'
+export { ConnectableShapeUtil, type ConnectableShape } from './lib/shapes/connectable'
+export { ConnectorShapeUtil } from './lib/shapes/connector/ConnectorShapeUtil'
 
 registerTldrawLibraryVersion(
 	(globalThis as any).TLDRAW_LIBRARY_NAME,

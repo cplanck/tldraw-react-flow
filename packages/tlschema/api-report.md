@@ -31,6 +31,9 @@ export const arrowBindingMigrations: TLPropsMigrations;
 export const arrowBindingProps: RecordProps<TLArrowBinding>;
 
 // @public (undocumented)
+export const arrowBindingVersions: {};
+
+// @public (undocumented)
 export const ArrowShapeArrowheadEndStyle: EnumStyleProp<"arrow" | "bar" | "diamond" | "dot" | "inverted" | "none" | "pipe" | "square" | "triangle">;
 
 // @public (undocumented)
@@ -41,6 +44,15 @@ export const arrowShapeMigrations: MigrationSequence;
 
 // @public (undocumented)
 export const arrowShapeProps: RecordProps<TLArrowShape>;
+
+// @alpha (undocumented)
+export const arrowShapeVersions: {
+    readonly AddIsPrecise: "com.tldraw.shape.arrow/2";
+    readonly AddLabelColor: "com.tldraw.shape.arrow/1";
+    readonly AddLabelPosition: "com.tldraw.shape.arrow/3";
+    readonly AddScale: "com.tldraw.shape.arrow/5";
+    readonly ExtractBindings: "com.tldraw.shape.arrow/4";
+};
 
 // @public
 export const assetIdValidator: T.Validator<TLAssetId>;
@@ -83,6 +95,54 @@ export const CameraRecordType: RecordType<TLCamera, never>;
 
 // @public
 export const canvasUiColorTypeValidator: T.Validator<"accent" | "black" | "laser" | "muted-1" | "selection-fill" | "selection-stroke" | "white">;
+
+// @public (undocumented)
+export type ConnectorBinding = TLBaseBinding<'connector', ConnectorBindingProps>;
+
+// @public (undocumented)
+export interface ConnectorBindingProps {
+    isExact: boolean;
+    isPrecise: boolean;
+    // (undocumented)
+    normalizedAnchor: VecModel;
+    // (undocumented)
+    terminal: 'end' | 'start';
+}
+
+// @public (undocumented)
+export type ConnectorShape = TLBaseShape<'connector', ConnectorShapeProps>;
+
+// @public (undocumented)
+export interface ConnectorShapeProps {
+    // (undocumented)
+    arrowheadEnd: TLArrowShapeArrowheadStyle;
+    // (undocumented)
+    arrowheadStart: TLArrowShapeArrowheadStyle;
+    // (undocumented)
+    bend: number;
+    // (undocumented)
+    color: TLDefaultColorStyle;
+    // (undocumented)
+    dash: TLDefaultDashStyle;
+    // (undocumented)
+    end: VecModel;
+    // (undocumented)
+    fill: TLDefaultFillStyle;
+    // (undocumented)
+    font: TLDefaultFontStyle;
+    // (undocumented)
+    labelColor: TLDefaultColorStyle;
+    // (undocumented)
+    labelPosition: number;
+    // (undocumented)
+    scale: number;
+    // (undocumented)
+    size: TLDefaultSizeStyle;
+    // (undocumented)
+    start: VecModel;
+    // (undocumented)
+    text: string;
+}
 
 // @public
 export function createAssetValidator<Type extends string, Props extends JsonObject>(type: Type, props: T.Validator<Props>): T.ObjectValidator<Expand<    { [P in "id" | "meta" | "typeName" | (undefined extends Props ? never : "props") | (undefined extends Type ? never : "type")]: {

@@ -25,6 +25,7 @@ export class ConnectableTool extends StateNode {
 			y: currentPagePoint.y - 50,
 			props: {
 				color: 'white',
+				stroke: 'black',
 				text: 'New Connectable Node',
 			},
 		})
