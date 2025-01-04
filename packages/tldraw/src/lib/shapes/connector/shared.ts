@@ -81,7 +81,7 @@ function getArrowTerminalInArrowSpace(
 				// if the parent is the bound shape, then it's ALWAYS precise
 				binding.props.isPrecise || forceImprecise
 					? binding.props.normalizedAnchor
-					: { x: 0.5, y: 0.5 },
+					: { x: 0.5, y: 0.2 },
 				size
 			)
 		)
@@ -172,31 +172,62 @@ export function createOrUpdateArrowBinding(
 	const arrowId = typeof arrow === 'string' ? arrow : arrow.id
 	const targetId = typeof target === 'string' ? target : target.id
 
-	console.log(arrowId)
-	console.log(targetId)
+	const boundShape = editor.getShape(targetId)
+	if (!boundShape) return
+
+	const { point, size } = editor.getShapeGeometry(boundShape).bounds
+
+	const cursorPagePosition = editor.inputs.currentPagePoint
+	const cursorLocalPosition = Mat.applyToPoint(
+		Mat.Inverse(editor.getShapePageTransform(boundShape)!),
+		cursorPagePosition
+	)
+
+	const potentialAnchors = [
+		{ x: 0.5, y: 0 }, // Top middle
+		{ x: 0.5, y: 1 }, // Bottom middle
+		{ x: 0, y: 0.5 }, // Left middle
+		{ x: 1, y: 0.5 }, // Right middle
+	]
+
+	const distances = potentialAnchors.map((anchor) => {
+		const anchorPoint = Vec.Add(point, Vec.MulV(anchor, size))
+		return {
+			anchor,
+			distance: Vec.Dist(cursorLocalPosition, anchorPoint),
+		}
+	})
+
+	const closestAnchor = distances.reduce((a, b) => (a.distance < b.distance ? a : b)).anchor
 
 	const existingMany = editor
 		.getBindingsFromShape<ConnectorBinding>(arrowId, 'connector')
 		.filter((b) => b.props.terminal === props.terminal)
 
-	// if we've somehow ended up with too many bindings, delete the extras
 	if (existingMany.length > 1) {
 		editor.deleteBindings(existingMany.slice(1))
 	}
 
 	const existing = existingMany[0]
-	if (existing) {
+	if (existing && !editor.isIn('select.dragging_handle')) {
+		// if user doesn't have the drag handle clicked, the retain the current anchor
 		editor.updateBinding({
 			...existing,
 			toId: targetId,
-			props,
+			props: { ...props, normalizedAnchor: props.normalizedAnchor, isPrecise: true },
+		})
+	} else if (existing) {
+		editor.updateBinding({
+			...existing,
+			toId: targetId,
+			props: { ...props, normalizedAnchor: closestAnchor, isPrecise: true },
 		})
 	} else {
 		editor.createBinding({
 			type: 'connector',
 			fromId: arrowId,
 			toId: targetId,
-			props,
+			props: { ...props, normalizedAnchor: closestAnchor, isPrecise: true },
 		})
 	}
 }

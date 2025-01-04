@@ -400,8 +400,6 @@ export class CodeBlockShapeUtil extends BaseBoxShapeUtil<CodeBlockShape> {
     // (undocumented)
     getDefaultProps(): CodeBlockShape['props'];
     // (undocumented)
-    getHandlesCoordinates: () => void;
-    // (undocumented)
     indicator(shape: CodeBlockShape): JSX_2.Element;
     // (undocumented)
     static props: {
@@ -540,7 +538,12 @@ export class ConnectorShapeUtil extends ShapeUtil<ConnectorShape> {
     // (undocumented)
     onTranslate(initialShape: ConnectorShape, shape: ConnectorShape): void;
     // (undocumented)
-    onTranslateStart(shape: ConnectorShape): void;
+    onTranslateStart(shape: ConnectorShape): ({
+        id: TLShapeId;
+        meta?: Partial<JsonObject> | undefined;
+        props?: Partial<ConnectorShapeProps> | undefined;
+        type: 'connector';
+    } & Partial<Omit<ConnectorShape, 'id' | 'meta' | 'props' | 'type'>>) | void;
     // (undocumented)
     static props: RecordProps<TLArrowShape>;
     // (undocumented)

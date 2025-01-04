@@ -1,13 +1,13 @@
 import {
-	Arc2d,
 	Box,
 	ConnectorBinding,
 	ConnectorShape,
 	ConnectorShapeProps,
-	Edge2d,
+	CubicBezier2d,
 	Editor,
 	Geometry2d,
 	Group2d,
+	JsonObject,
 	Rectangle2d,
 	SVGContainer,
 	ShapeUtil,
@@ -15,6 +15,7 @@ import {
 	TLHandle,
 	TLHandleDragInfo,
 	TLResizeInfo,
+	TLShapeId,
 	TLShapePartial,
 	TLShapeUtilCanBindOpts,
 	TLShapeUtilCanvasSvgDef,
@@ -24,20 +25,19 @@ import {
 	getDefaultColorTheme,
 	getPerfectDashProps,
 	lerp,
-	mapObjectMapValues,
 	maybeSnapToGrid,
 	structuredClone,
 	toDomPrecision,
 	track,
 	useEditor,
-	useIsEditing,
 	useSharedSafeId,
 	useValue,
 } from '@tldraw/editor'
-import React from 'react'
-import { updateArrowTerminal } from '../../bindings/connector/ConnectorBindingUtil'
 
-import { ShapeFill } from '../shared/ShapeFill'
+// import { Path2D } from 'tldraw';
+
+import React from 'react'
+
 import { SvgTextLabel } from '../shared/SvgTextLabel'
 import { TextLabel } from '../shared/TextLabel'
 import { ARROW_LABEL_PADDING, STROKE_SIZES, TEXT_PROPS } from '../shared/default-shape-constants'
@@ -50,12 +50,6 @@ import { useDefaultColorTheme } from '../shared/useDefaultColorTheme'
 import { getArrowLabelFontSize, getArrowLabelPosition } from './arrowLabel'
 import { getArrowheadPathForType } from './arrowheads'
 import {
-	getCurvedArrowHandlePath,
-	getSolidCurvedArrowPath,
-	getSolidStraightArrowPath,
-	getStraightArrowHandlePath,
-} from './arrowpaths'
-import {
 	ConnectorBindings,
 	createOrUpdateArrowBinding,
 	getArrowBindings,
@@ -63,6 +57,8 @@ import {
 	getArrowTerminalsInArrowSpace,
 	removeArrowBinding,
 } from './shared'
+
+import './styles.css'
 
 enum ARROW_HANDLES {
 	START = 'start',
@@ -79,6 +75,7 @@ export class ConnectorShapeUtil extends ShapeUtil<ConnectorShape> {
 	override canEdit() {
 		return true
 	}
+
 	override canBind({ toShapeType }: TLShapeUtilCanBindOpts<ConnectorShape>): boolean {
 		// bindings can go from arrows to shapes, but not from shapes to arrows
 		return toShapeType !== 'connector'
@@ -125,22 +122,30 @@ export class ConnectorShapeUtil extends ShapeUtil<ConnectorShape> {
 
 	getGeometry(shape: ConnectorShape) {
 		const info = getArrowInfo(this.editor, shape)!
+		const splineInfo = getSplinePath(shape, this.editor)
+		console.log(splineInfo)
+		console.log(info)
 
 		const debugGeom: Geometry2d[] = []
 
-		const bodyGeom = info.isStraight
-			? new Edge2d({
-					start: Vec.From(info.start.point),
-					end: Vec.From(info.end.point),
-				})
-			: new Arc2d({
-					center: Vec.Cast(info.handleArc.center),
-					start: Vec.Cast(info.start.point),
-					end: Vec.Cast(info.end.point),
-					sweepFlag: info.bodyArc.sweepFlag,
-					largeArcFlag: info.bodyArc.largeArcFlag,
-				})
+		// Create the main geometry using the spline path directly
+		const [start, c1, c2, end] = splineInfo.path
+			.replace('M ', '')
+			.replace(' C ', ',')
+			.split(',')
+			.map((str) => {
+				const [x, y] = str.trim().split(' ').map(Number)
+				return Vec.From({ x, y })
+			})
 
+		const bodyGeom = new CubicBezier2d({
+			start,
+			cp1: c1,
+			cp2: c2,
+			end,
+		})
+
+		// Handle text label if present
 		let labelGeom
 		if (shape.props.text.trim()) {
 			const labelPosition = getArrowLabelPosition(this.editor, shape)
@@ -155,6 +160,7 @@ export class ConnectorShapeUtil extends ShapeUtil<ConnectorShape> {
 			})
 		}
 
+		// Return a group containing both the spline geometry and any labels
 		return new Group2d({
 			children: [...(labelGeom ? [bodyGeom, labelGeom] : [bodyGeom]), ...debugGeom],
 		})
@@ -170,13 +176,6 @@ export class ConnectorShapeUtil extends ShapeUtil<ConnectorShape> {
 				index: 'a0',
 				x: info.start.handle.x,
 				y: info.start.handle.y,
-			},
-			{
-				id: ARROW_HANDLES.MIDDLE,
-				type: 'virtual',
-				index: 'a2',
-				x: info.middle.x,
-				y: info.middle.y,
 			},
 			{
 				id: ARROW_HANDLES.END,
@@ -292,8 +291,8 @@ export class ConnectorShapeUtil extends ShapeUtil<ConnectorShape> {
 		}
 
 		const normalizedAnchor = {
-			x: (pointInTargetSpace.x - targetBounds.minX) / targetBounds.width,
-			y: (pointInTargetSpace.y - targetBounds.minY) / targetBounds.height,
+			x: (pointInTargetSpace.x - targetBounds.minX + 0.5) / targetBounds.width,
+			y: (pointInTargetSpace.y - targetBounds.minY + 0.5) / targetBounds.height,
 		}
 
 		if (precise) {
@@ -339,73 +338,87 @@ export class ConnectorShapeUtil extends ShapeUtil<ConnectorShape> {
 		return update
 	}
 
-	override onTranslateStart(shape: ConnectorShape) {
-		const bindings = getArrowBindings(this.editor, shape)
+	// override onTranslateStart(shape: ConnectorShape) {
+	// 	const bindings = getArrowBindings(this.editor, shape)
 
-		const terminalsInArrowSpace = getArrowTerminalsInArrowSpace(this.editor, shape, bindings)
-		const shapePageTransform = this.editor.getShapePageTransform(shape.id)!
+	// 	const terminalsInArrowSpace = getArrowTerminalsInArrowSpace(this.editor, shape, bindings)
+	// 	const shapePageTransform = this.editor.getShapePageTransform(shape.id)!
 
-		// If at least one bound shape is in the selection, do nothing;
-		// If no bound shapes are in the selection, unbind any bound shapes
+	// 	// If at least one bound shape is in the selection, do nothing;
+	// 	// If no bound shapes are in the selection, unbind any bound shapes
 
-		const selectedShapeIds = this.editor.getSelectedShapeIds()
+	// 	const selectedShapeIds = this.editor.getSelectedShapeIds()
 
-		if (
-			(bindings.start &&
-				(selectedShapeIds.includes(bindings.start.toId) ||
-					this.editor.isAncestorSelected(bindings.start.toId))) ||
-			(bindings.end &&
-				(selectedShapeIds.includes(bindings.end.toId) ||
-					this.editor.isAncestorSelected(bindings.end.toId)))
-		) {
-			return
-		}
+	// 	if (
+	// 		(bindings.start &&
+	// 			(selectedShapeIds.includes(bindings.start.toId) ||
+	// 				this.editor.isAncestorSelected(bindings.start.toId))) ||
+	// 		(bindings.end &&
+	// 			(selectedShapeIds.includes(bindings.end.toId) ||
+	// 				this.editor.isAncestorSelected(bindings.end.toId)))
+	// 	) {
+	// 		return
+	// 	}
 
-		// When we start translating shapes, record where their bindings were in page space so we
-		// can maintain them as we translate the arrow
-		shapeAtTranslationStart.set(shape, {
-			pagePosition: shapePageTransform.applyToPoint(shape),
-			terminalBindings: mapObjectMapValues(terminalsInArrowSpace, (terminalName, point) => {
-				const binding = bindings[terminalName]
-				if (!binding) return null
-				return {
-					binding,
-					shapePosition: point,
-					pagePosition: shapePageTransform.applyToPoint(point),
-				}
-			}),
-		})
+	// 	// When we start translating shapes, record where their bindings were in page space so we
+	// 	// can maintain them as we translate the arrow
+	// 	shapeAtTranslationStart.set(shape, {
+	// 		pagePosition: shapePageTransform.applyToPoint(shape),
+	// 		terminalBindings: mapObjectMapValues(terminalsInArrowSpace, (terminalName, point) => {
+	// 			const binding = bindings[terminalName]
+	// 			if (!binding) return null
+	// 			return {
+	// 				binding,
+	// 				shapePosition: point,
+	// 				pagePosition: shapePageTransform.applyToPoint(point),
+	// 			}
+	// 		}),
+	// 	})
 
-		// update arrow terminal bindings eagerly to make sure the arrows unbind nicely when translating
-		if (bindings.start) {
-			updateArrowTerminal({
-				editor: this.editor,
-				arrow: shape,
-				terminal: 'start',
-				useHandle: true,
-			})
-			shape = this.editor.getShape(shape.id) as ConnectorShape
-		}
-		if (bindings.end) {
-			updateArrowTerminal({
-				editor: this.editor,
-				arrow: shape,
-				terminal: 'end',
-				useHandle: true,
-			})
-		}
+	// 	// update arrow terminal bindings eagerly to make sure the arrows unbind nicely when translating
+	// 	if (bindings.start) {
+	// 		updateArrowTerminal({
+	// 			editor: this.editor,
+	// 			arrow: shape,
+	// 			terminal: 'start',
+	// 			useHandle: true,
+	// 		})
+	// 		shape = this.editor.getShape(shape.id) as ConnectorShape
+	// 	}
+	// 	if (bindings.end) {
+	// 		updateArrowTerminal({
+	// 			editor: this.editor,
+	// 			arrow: shape,
+	// 			terminal: 'end',
+	// 			useHandle: true,
+	// 		})
+	// 	}
 
-		for (const handleName of [ARROW_HANDLES.START, ARROW_HANDLES.END] as const) {
-			const binding = bindings[handleName]
-			if (!binding) continue
+	// 	for (const handleName of [ARROW_HANDLES.START, ARROW_HANDLES.END] as const) {
+	// 		const binding = bindings[handleName]
+	// 		if (!binding) continue
 
-			this.editor.updateBinding({
-				...binding,
-				props: { ...binding.props, isPrecise: true },
-			})
-		}
+	// 		this.editor.updateBinding({
+	// 			...binding,
+	// 			props: { ...binding.props, isPrecise: true },
+	// 		})
+	// 	}
 
-		return
+	// 	return
+	// }
+
+	override onTranslateStart(
+		shape: ConnectorShape
+	):
+		| void
+		| ({
+				id: TLShapeId
+				type: 'connector'
+				props?: Partial<ConnectorShapeProps> | undefined
+				meta?: Partial<JsonObject> | undefined
+		  } & Partial<Omit<ConnectorShape, 'type' | 'id' | 'props' | 'meta'>>) {
+		// prevent user from moving the connector
+		return undefined
 	}
 
 	override onTranslate(initialShape: ConnectorShape, shape: ConnectorShape) {
@@ -639,96 +652,32 @@ export class ConnectorShapeUtil extends ShapeUtil<ConnectorShape> {
 		)
 	}
 
-	indicator(shape: ConnectorShape) {
-		// eslint-disable-next-line react-hooks/rules-of-hooks
-		const isEditing = useIsEditing(shape.id)
-		// eslint-disable-next-line react-hooks/rules-of-hooks
-		const clipPathId = useSharedSafeId(shape.id + '_clip')
+	override indicator(shape: ConnectorShape) {
+		const editor = this.editor
+		const splineInfo = getSplinePath(shape, editor)
 
-		const info = getArrowInfo(this.editor, shape)
-		if (!info) return null
-
-		const { start, end } = getArrowTerminalsInArrowSpace(this.editor, shape, info?.bindings)
-		const geometry = this.editor.getShapeGeometry<Group2d>(shape)
-		const bounds = geometry.bounds
-
-		const labelGeometry = shape.props.text.trim() ? (geometry.children[1] as Rectangle2d) : null
-
-		if (Vec.Equals(start, end)) return null
-
-		const strokeWidth = STROKE_SIZES[shape.props.size] * shape.props.scale
-
-		const as = info.start.arrowhead && getArrowheadPathForType(info, 'start', strokeWidth)
-		const ae = info.end.arrowhead && getArrowheadPathForType(info, 'end', strokeWidth)
-
-		const path = info.isStraight ? getSolidStraightArrowPath(info) : getSolidCurvedArrowPath(info)
-
-		const includeClipPath =
-			(as && info.start.arrowhead !== 'arrow') ||
-			(ae && info.end.arrowhead !== 'arrow') ||
-			!!labelGeometry
-
-		if (isEditing && labelGeometry) {
-			return (
-				<rect
-					x={toDomPrecision(labelGeometry.x)}
-					y={toDomPrecision(labelGeometry.y)}
-					width={labelGeometry.w}
-					height={labelGeometry.h}
-					rx={3.5 * shape.props.scale}
-					ry={3.5 * shape.props.scale}
-				/>
-			)
-		}
-		const clipStartArrowhead = !(
-			info.start.arrowhead === 'none' || info.start.arrowhead === 'arrow'
-		)
-		const clipEndArrowhead = !(info.end.arrowhead === 'none' || info.end.arrowhead === 'arrow')
+		// Return null if start and end are the same point
+		if (Vec.Equals(splineInfo.start, splineInfo.end)) return null
 
 		return (
 			<g>
-				{includeClipPath && (
-					<defs>
-						<ArrowClipPath
-							hasText={shape.props.text.trim().length > 0}
-							bounds={bounds}
-							labelBounds={labelGeometry ? labelGeometry.getBounds() : new Box(0, 0, 0, 0)}
-							as={clipStartArrowhead && as ? as : ''}
-							ae={clipEndArrowhead && ae ? ae : ''}
-						/>
-					</defs>
-				)}
-				<g
-					style={{
-						clipPath: includeClipPath ? `url(#${clipPathId})` : undefined,
-						WebkitClipPath: includeClipPath ? `url(#${clipPathId})` : undefined,
-					}}
-				>
-					{/* This rect needs to be here if we're creating a mask due to an svg quirk on Chrome */}
-					{includeClipPath && (
-						<rect
-							x={bounds.minX - 100}
-							y={bounds.minY - 100}
-							width={bounds.width + 200}
-							height={bounds.height + 200}
-							opacity={0}
-						/>
-					)}
-
-					<path d={path} />
-				</g>
-				{as && <path d={as} />}
-				{ae && <path d={ae} />}
-				{labelGeometry && (
-					<rect
-						x={toDomPrecision(labelGeometry.x)}
-						y={toDomPrecision(labelGeometry.y)}
-						width={labelGeometry.w}
-						height={labelGeometry.h}
-						rx={3.5}
-						ry={3.5}
-					/>
-				)}
+				{/* Create a transparent path for hover detection */}
+				<path
+					d={splineInfo.path} // Use the spline path for the indicator
+					fill="none"
+					strokeWidth={0.5}
+					stroke={'blue'}
+					opacity={0.5} // Adjust opacity as needed
+					pointerEvents="all" // Ensure it captures pointer events
+				/>
+				{/* Optionally, you can add a visual indicator here */}
+				<path
+					d={splineInfo.path}
+					fill="none"
+					strokeWidth={1}
+					stroke={'blue'}
+					opacity={0.5} // Adjust opacity as needed
+				/>
 			</g>
 		)
 	}
@@ -821,6 +770,61 @@ export function getArrowLength(editor: Editor, shape: ConnectorShape): number {
 		: Math.abs(info.handleArc.length)
 }
 
+function getSplinePath(shape: ConnectorShape, editor: Editor) {
+	const bindings = getArrowBindings(editor, shape)
+
+	// Get the actual terminal points including bound shape edges
+	const terminals = getArrowTerminalsInArrowSpace(editor, shape, bindings)
+	const start = terminals.start
+	const end = terminals.end
+
+	const dx = end.x - start.x
+	const dy = end.y - start.y
+	const distance = Math.sqrt(dx * dx + dy * dy)
+
+	const offset = distance * 0.25
+
+	let cp1x, cp1y, cp2x, cp2y
+
+	// Use normalized anchors from bindings
+	const startBinding = bindings?.start
+	const endBinding = bindings?.end
+
+	const isStartVertical =
+		startBinding?.props?.normalizedAnchor?.y === 0 || startBinding?.props?.normalizedAnchor?.y === 1
+	const isEndVertical =
+		endBinding?.props?.normalizedAnchor?.y === 0 || endBinding?.props?.normalizedAnchor?.y === 1
+
+	// Set control points based on connection sides
+	if (isStartVertical && startBinding?.props?.normalizedAnchor?.y === 1) {
+		cp1x = start.x
+		cp1y = start.y + (dy > 0 ? offset : offset)
+	} else if (isStartVertical && startBinding?.props?.normalizedAnchor?.y === 0) {
+		cp1x = start.x
+		cp1y = start.y + (dy > 0 ? -offset : -offset)
+	} else {
+		cp1x = start.x + (dx > 0 ? offset : -offset)
+		cp1y = start.y
+	}
+
+	if (isEndVertical && endBinding?.props?.normalizedAnchor?.y === 1) {
+		cp2x = end.x
+		cp2y = end.y + (dy > 0 ? offset : offset)
+	} else if (isEndVertical && endBinding?.props?.normalizedAnchor?.y === 0) {
+		cp2x = end.x
+		cp2y = end.y + (dy > 0 ? -offset : -offset)
+	} else {
+		cp2x = end.x + (dx > 0 ? -offset : offset)
+		cp2y = end.y
+	}
+
+	return {
+		path: `M ${start.x} ${start.y} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${end.x} ${end.y}`,
+		start,
+		end,
+	}
+}
+
 const ArrowSvg = track(function ArrowSvg({
 	shape,
 	shouldDisplayHandles,
@@ -830,9 +834,28 @@ const ArrowSvg = track(function ArrowSvg({
 }) {
 	const editor = useEditor()
 	const theme = useDefaultColorTheme()
-	const info = getArrowInfo(editor, shape)
+
 	const bounds = Box.ZeroFix(editor.getShapeGeometry(shape).bounds)
 	const bindings = getArrowBindings(editor, shape)
+	const info = getArrowInfo(editor, shape)
+
+	const splineInfo = getSplinePath(shape, editor)
+	const [start, c1, c2, end] = splineInfo.path
+		.replace('M ', '')
+		.replace(' C ', ',')
+		.split(',')
+		.map((str) => {
+			const [x, y] = str.trim().split(' ').map(Number)
+			return Vec.From({ x, y })
+		})
+
+	const bodyGeom = new CubicBezier2d({
+		start,
+		cp1: c1,
+		cp2: c2,
+		end,
+	})
+
 	const isForceSolid = useValue(
 		'force solid',
 		() => {
@@ -845,14 +868,10 @@ const ArrowSvg = track(function ArrowSvg({
 	const arrowheadDotId = useSharedSafeId('arrowhead-dot')
 	const arrowheadCrossId = useSharedSafeId('arrowhead-cross')
 
-	if (!info?.isValid) return null
-
 	const strokeWidth = STROKE_SIZES[shape.props.size] * shape.props.scale
 
-	const as = info.start.arrowhead && getArrowheadPathForType(info, 'start', strokeWidth)
-	const ae = info.end.arrowhead && getArrowheadPathForType(info, 'end', strokeWidth)
-
-	const path = info.isStraight ? getSolidStraightArrowPath(info) : getSolidCurvedArrowPath(info)
+	const as = info?.start.arrowhead && getArrowheadPathForType(info, 'start', strokeWidth)
+	const ae = info?.end.arrowhead && getArrowheadPathForType(info, 'end', strokeWidth)
 
 	let handlePath: null | React.JSX.Element = null
 
@@ -872,7 +891,7 @@ const ArrowSvg = track(function ArrowSvg({
 			bindings.start || bindings.end ? (
 				<path
 					className="tl-arrow-hint"
-					d={info.isStraight ? getStraightArrowHandlePath(info) : getCurvedArrowHandlePath(info)}
+					d={splineInfo.path}
 					strokeDasharray={strokeDasharray}
 					strokeDashoffset={strokeDashoffset}
 					strokeWidth={sw}
@@ -899,23 +918,13 @@ const ArrowSvg = track(function ArrowSvg({
 			) : null
 	}
 
-	const { strokeDasharray, strokeDashoffset } = getPerfectDashProps(
-		info.isStraight ? info.length : Math.abs(info.bodyArc.length),
-		strokeWidth,
-		{
-			style: shape.props.dash,
-			forceSolid: isForceSolid,
-		}
-	)
-
 	const labelPosition = getArrowLabelPosition(editor, shape)
 
-	const clipStartArrowhead = !(info.start.arrowhead === 'none' || info.start.arrowhead === 'arrow')
-	const clipEndArrowhead = !(info.end.arrowhead === 'none' || info.end.arrowhead === 'arrow')
+	const clipStartArrowhead = 'none' // !(info.start.arrowhead === 'none' || info.start.arrowhead === 'arrow')
+	const clipEndArrowhead = 'none' // !(info.end.arrowhead === 'none' || info.end.arrowhead === 'arrow')
 
 	return (
 		<>
-			{/* Yep */}
 			<defs>
 				<clipPath id={clipPathId}>
 					<ArrowClipPath
@@ -930,18 +939,13 @@ const ArrowSvg = track(function ArrowSvg({
 			<g
 				fill="none"
 				stroke={theme[shape.props.color].solid}
-				strokeWidth={strokeWidth}
+				// strokeWidth={strokeWidth}
 				strokeLinejoin="round"
 				strokeLinecap="round"
 				pointerEvents="none"
 			>
 				{handlePath}
-				<g
-					style={{
-						clipPath: `url(#${clipPathId})`,
-						WebkitClipPath: `url(#${clipPathId})`,
-					}}
-				>
+				<g>
 					<rect
 						x={toDomPrecision(bounds.minX - 100)}
 						y={toDomPrecision(bounds.minY - 100)}
@@ -949,9 +953,15 @@ const ArrowSvg = track(function ArrowSvg({
 						height={toDomPrecision(bounds.height + 200)}
 						opacity={0}
 					/>
-					<path d={path} strokeDasharray={strokeDasharray} strokeDashoffset={strokeDashoffset} />
+					<path
+						d={splineInfo.path}
+						// strokeDasharray={strokeDasharray}
+						strokeDasharray="5 8"
+						// strokeDashoffset={strokeDashoffset}
+						className="animated-dashed-line"
+					/>
 				</g>
-				{as && clipStartArrowhead && shape.props.fill !== 'none' && (
+				{/* {as && clipStartArrowhead && shape.props.fill !== 'none' && (
 					<ShapeFill
 						theme={theme}
 						d={as}
@@ -970,7 +980,7 @@ const ArrowSvg = track(function ArrowSvg({
 					/>
 				)}
 				{as && <path d={as} />}
-				{ae && <path d={ae} />}
+				{ae && <path d={ae} />} */}
 			</g>
 		</>
 	)

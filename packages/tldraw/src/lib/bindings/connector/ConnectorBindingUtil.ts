@@ -7,7 +7,6 @@ import {
 	ConnectorBinding,
 	ConnectorShape,
 	Editor,
-	IndexKey,
 	TLArrowBindingProps,
 	TLParentId,
 	TLShape,
@@ -18,8 +17,6 @@ import {
 	arrowBindingMigrations,
 	arrowBindingProps,
 	assert,
-	getIndexAbove,
-	getIndexBetween,
 	intersectLineSegmentCircle,
 } from '@tldraw/editor'
 import { getArrowBindings, getArrowInfo, removeArrowBinding } from '../../shapes/connector/shared'
@@ -122,7 +119,7 @@ function reparentArrow(editor: Editor, arrowId: TLShapeId) {
 	let highestSibling: TLShape | undefined
 
 	if (startSibling && endSibling) {
-		highestSibling = startSibling.index > endSibling.index ? startSibling : endSibling
+		highestSibling = startSibling.index < endSibling.index ? startSibling : endSibling
 	} else if (startSibling && !endSibling) {
 		highestSibling = startSibling
 	} else if (endSibling && !startSibling) {
@@ -131,42 +128,13 @@ function reparentArrow(editor: Editor, arrowId: TLShapeId) {
 		return
 	}
 
-	let finalIndex: IndexKey
-
-	const higherSiblings = editor
+	// Get all siblings and find the lowest index
+	const allSiblings = editor
 		.getSortedChildIdsForParent(highestSibling.parentId)
 		.map((id) => editor.getShape(id)!)
-		.filter((sibling) => sibling.index > highestSibling!.index)
 
-	if (higherSiblings.length) {
-		// there are siblings above the highest bound sibling, we need to
-		// insert between them.
-
-		// if the next sibling is also a bound arrow though, we can end up
-		// all fighting for the same indexes. so lets find the next
-		// non-arrow sibling...
-		const nextHighestNonArrowSibling = higherSiblings.find(
-			(sibling) => sibling.type !== 'connector'
-		)
-
-		if (
-			// ...then, if we're above the last shape we want to be above...
-			reparentedArrow.index > highestSibling.index &&
-			// ...but below the next non-arrow sibling...
-			(!nextHighestNonArrowSibling || reparentedArrow.index < nextHighestNonArrowSibling.index)
-		) {
-			// ...then we're already in the right place. no need to update!
-			return
-		}
-
-		// otherwise, we need to find the index between the highest sibling
-		// we want to be above, and the next highest sibling we want to be
-		// below:
-		finalIndex = getIndexBetween(highestSibling.index, higherSiblings[0].index)
-	} else {
-		// if there are no siblings above us, we can just get the next index:
-		finalIndex = getIndexAbove(highestSibling.index)
-	}
+	// Place connector at the lowest possible index
+	const finalIndex = allSiblings[0].index
 
 	if (finalIndex !== reparentedArrow.index) {
 		editor.updateShapes<ConnectorShape>([{ id: arrowId, type: 'connector', index: finalIndex }])

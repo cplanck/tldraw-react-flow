@@ -31,10 +31,6 @@ export class CodeBlockShapeUtil extends BaseBoxShapeUtil<CodeBlockShape> {
 		}
 	}
 
-	getHandlesCoordinates = () => {
-		console.log('hello')
-	}
-
 	component(shape: CodeBlockShape) {
 		return (
 			<HTMLContainer
@@ -52,37 +48,33 @@ export class CodeBlockShapeUtil extends BaseBoxShapeUtil<CodeBlockShape> {
 				}}
 			>
 				{shape.props.text}
-
-				{/* Top Handle */}
 				<div
 					data-handle="top"
 					id={`handle-top-${shape.id}`}
 					style={{
 						position: 'absolute',
-						top: '-8px',
+						top: '-6px',
 						left: '50%',
 						transform: 'translateX(-50%)',
 						width: '10px',
 						height: '10px',
-						backgroundColor: 'blue',
+						backgroundColor: 'grey',
 						borderRadius: '50%',
 						pointerEvents: 'auto',
 						cursor: 'crosshair',
 					}}
 				/>
-
-				{/* Bottom Handle */}
 				<div
 					data-handle="bottom"
 					id={`handle-bottom-${shape.id}`}
 					style={{
 						position: 'absolute',
-						bottom: '-8px',
+						bottom: '-6px',
 						left: '50%',
 						transform: 'translateX(-50%)',
 						width: '10px',
 						height: '10px',
-						backgroundColor: 'blue',
+						backgroundColor: 'grey',
 						borderRadius: '50%',
 						pointerEvents: 'auto',
 						cursor: 'crosshair',
@@ -100,7 +92,7 @@ export class CodeBlockShapeUtil extends BaseBoxShapeUtil<CodeBlockShape> {
 				rx={4}
 				ry={4}
 				stroke="blue"
-				strokeWidth={1}
+				strokeWidth={0}
 				fill="none"
 			/>
 		)

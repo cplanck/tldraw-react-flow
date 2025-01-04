@@ -1,6 +1,5 @@
 import { createMigrationSequence } from '@tldraw/store'
 import { T } from '@tldraw/validate'
-import { TLArrowBinding } from '../bindings/TLArrowBinding'
 import { VecModel, vecModelValidator } from '../misc/geometry-types'
 import { createBindingId } from '../records/TLBinding'
 import { TLShapeId, createShapePropsMigrationIds } from '../records/TLShape'
@@ -8,6 +7,7 @@ import { RecordProps, TLPropsMigration, createPropsMigration } from '../recordsW
 import { StyleProp } from '../styles/StyleProp'
 import { TLArrowShapeArrowheadStyle } from './TLArrowShape'
 
+import { ConnectorBinding } from '../bindings/ConnectorBinding'
 import {
 	DefaultColorStyle,
 	DefaultLabelColorStyle,
@@ -18,7 +18,6 @@ import { DefaultFillStyle, TLDefaultFillStyle } from '../styles/TLFillStyle'
 import { DefaultFontStyle, TLDefaultFontStyle } from '../styles/TLFontStyle'
 import { DefaultSizeStyle, TLDefaultSizeStyle } from '../styles/TLSizeStyle'
 import { TLBaseShape } from './TLBaseShape'
-
 const arrowheadTypes = [
 	'arrow',
 	'triangle',
@@ -177,10 +176,10 @@ export const arrowShapeMigrations = createMigrationSequence({
 					const { start, end } = arrow.props
 					if (start.type === 'binding') {
 						const id = createBindingId()
-						const binding: TLArrowBinding = {
+						const binding: ConnectorBinding = {
 							typeName: 'binding',
 							id,
-							type: 'arrow',
+							type: 'connector',
 							fromId: arrow.id,
 							toId: start.boundShapeId,
 							meta: {},
@@ -199,10 +198,10 @@ export const arrowShapeMigrations = createMigrationSequence({
 					}
 					if (end.type === 'binding') {
 						const id = createBindingId()
-						const binding: TLArrowBinding = {
+						const binding: ConnectorBinding = {
 							typeName: 'binding',
 							id,
-							type: 'arrow',
+							type: 'connector',
 							fromId: arrow.id,
 							toId: end.boundShapeId,
 							meta: {},

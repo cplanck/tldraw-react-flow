@@ -1,6 +1,4 @@
-import { StateNode, createShapeId, maybeSnapToGrid } from '@tldraw/editor'
-
-import { ConnectorShape } from '@tldraw/editor'
+import { ConnectorShape, StateNode, createShapeId, maybeSnapToGrid } from '@tldraw/editor'
 
 export class Pointing extends StateNode {
 	static override id = 'pointing'
@@ -52,7 +50,6 @@ export class Pointing extends StateNode {
 
 			if (!this.shape) throw Error(`expected shape`)
 
-			// const initialEndHandle = this.editor.getShapeHandles(this.shape)!.find((h) => h.id === 'end')!
 			this.updateArrowShapeEndHandle()
 
 			this.editor.setCurrentTool('select.dragging_handle', {
@@ -91,45 +88,53 @@ export class Pointing extends StateNode {
 	}
 
 	createArrowShape() {
-		console.log('createArrowShape')
 		const { originPagePoint } = this.editor.inputs
+
 		const id = createShapeId()
 
-		this.markId = this.editor.markHistoryStoppingPoint(`creating_connector:${id}`)
+		this.markId = this.editor.markHistoryStoppingPoint(`creating_arrow:${id}`)
 		const newPoint = maybeSnapToGrid(originPagePoint, this.editor)
-
-		// Create shape with simpler start/end coordinates
-		this.editor.createShape({
+		this.editor.createShape<ConnectorShape>({
 			id,
 			type: 'connector',
 			x: newPoint.x,
 			y: newPoint.y,
 			props: {
-				color: 'red',
-				size: 's',
+				color: 'grey',
 				arrowheadStart: 'none',
 				arrowheadEnd: 'none',
-				start: {
-					x: 0,
-					y: 0,
-				},
-				end: {
-					x: 0,
-					y: 0,
-				},
+				size: 's',
+				scale: this.editor.user.getIsDynamicResizeMode() ? 1 / this.editor.getZoomLevel() : 1,
 			},
 		})
 
-		this.shape = this.editor.getShape(id)
-		if (!this.shape) throw Error(`expected shape`)
+		const shape = this.editor.getShape<ConnectorShape>(id)
+		if (!shape) throw Error(`expected shape`)
 
+		const handles = this.editor.getShapeHandles(shape)
+		if (!handles) throw Error(`expected handles for arrow`)
+
+		const util = this.editor.getShapeUtil<ConnectorShape>('connector')
+		const initial = this.shape
+		const startHandle = handles.find((h) => h.id === 'start')!
+		const change = util.onHandleDrag?.(shape, {
+			handle: { ...startHandle, x: 0, y: 0 },
+			isPrecise: true,
+			initial: initial,
+		})
+
+		if (change) {
+			this.editor.updateShapes([change])
+		}
+
+		// Cache the current shape after those changes
+		this.shape = this.editor.getShape(id)
 		this.editor.select(id)
 	}
 
 	updateArrowShapeEndHandle() {
 		if (!this.shape) return
 
-		console.log('updateArrowShapeEndHandle')
 		const point = this.editor.getPointInShapeSpace(this.shape, this.editor.inputs.currentPagePoint)
 
 		this.editor.updateShape({
