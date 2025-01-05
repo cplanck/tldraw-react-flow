@@ -1,11 +1,13 @@
 {
 	"name": "@tldraw/monorepo",
-	"description": "A tiny little drawing app (monorepo).",
-	"version": "0.0.0",
-	"private": true,
+	"description": "A tldraw fork with react flow features.",
+	"version": "0.0.1",
+	"publishConfig": {
+		"access": "public"
+	},
 	"author": {
-		"name": "tldraw Inc.",
-		"email": "hello@tldraw.com"
+		"name": "Cameron Planck",
+		"email": "cameronplanck@gmail.com"
 	},
 	"homepage": "https://tldraw.dev",
 	"repository": {
@@ -68,7 +70,7 @@
 		"npm": ">=7.0.0",
 		"node": ">=20.0.0"
 	},
-	"packageManager": "yarn@4.0.2",
+	"packageManager": "yarn@4.6.0",
 	"lint-staged": {
 		"*.{js,jsx,ts,tsx,json}": [
 			"prettier --write --cache --log-level=error"

@@ -1,7 +1,7 @@
 import { StateNode, createShapeId } from '@tldraw/editor'
 
 /**
- * @alpha
+ * @public
  */
 export class ConnectableTool extends StateNode {
 	static override id = 'connectable'

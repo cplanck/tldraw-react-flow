@@ -34,8 +34,6 @@ import {
 	useValue,
 } from '@tldraw/editor'
 
-// import { Path2D } from 'tldraw';
-
 import React from 'react'
 
 import { SvgTextLabel } from '../shared/SvgTextLabel'
@@ -58,7 +56,7 @@ import {
 	removeArrowBinding,
 } from './shared'
 
-import './styles.css'
+// import './styles.css'
 
 enum ARROW_HANDLES {
 	START = 'start',
@@ -66,7 +64,7 @@ enum ARROW_HANDLES {
 	END = 'end',
 }
 
-/** @alpha */
+/** @public */
 export class ConnectorShapeUtil extends ShapeUtil<ConnectorShape> {
 	static override type = 'connector' as const
 	static override props = arrowShapeProps
@@ -407,9 +405,7 @@ export class ConnectorShapeUtil extends ShapeUtil<ConnectorShape> {
 	// 	return
 	// }
 
-	override onTranslateStart(
-		shape: ConnectorShape
-	):
+	override onTranslateStart(shape: ConnectorShape):
 		| void
 		| ({
 				id: TLShapeId

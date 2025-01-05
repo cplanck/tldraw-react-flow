@@ -101,6 +101,7 @@ export default function ConnectableExample() {
 				components={components}
 				assetUrls={customAssetUrls2}
 				persistenceKey="connectable-example"
+				inferDarkMode
 			>
 				<ConnectableCanvas />
 			</Tldraw>

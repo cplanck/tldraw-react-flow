@@ -1,7 +1,7 @@
 import { StateNode, createShapeId } from '@tldraw/editor'
 
 /**
- * @alpha
+ * @public
  */
 export class CodeBlockTool extends StateNode {
 	static override id = 'codeBlock'

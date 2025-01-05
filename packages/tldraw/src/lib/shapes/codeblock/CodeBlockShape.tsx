@@ -1,7 +1,8 @@
 import { BaseBoxShapeUtil, HTMLContainer, T, TLBaseShape } from '@tldraw/editor'
+import { useDefaultColorTheme } from '../shared/useDefaultColorTheme'
 
 /**
- * @alpha
+ * @public
  */
 export type CodeBlockShape = TLBaseShape<
 	'codeBlock',
@@ -12,7 +13,7 @@ export type CodeBlockShape = TLBaseShape<
 	}
 >
 /**
- * @alpha
+ * @public
  */
 export class CodeBlockShapeUtil extends BaseBoxShapeUtil<CodeBlockShape> {
 	static override type = 'codeBlock'
@@ -32,14 +33,18 @@ export class CodeBlockShapeUtil extends BaseBoxShapeUtil<CodeBlockShape> {
 	}
 
 	component(shape: CodeBlockShape) {
+		const isDarkMode = useDefaultColorTheme().id == 'dark' ? true : false
+		console.log(isDarkMode)
+		console.log(isDarkMode)
+
 		return (
 			<HTMLContainer
 				style={{
 					position: 'relative',
 					width: shape.props.w,
 					height: shape.props.h,
-					border: '2px solid black',
-					backgroundColor: 'white',
+					border: isDarkMode ? '2px solid #1c1c1c' : '2px solid black',
+					backgroundColor: isDarkMode ? '#101011' : 'white',
 					borderRadius: '4px',
 					display: 'flex',
 					alignItems: 'center',

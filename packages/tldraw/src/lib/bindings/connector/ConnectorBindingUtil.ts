@@ -22,7 +22,7 @@ import {
 import { getArrowBindings, getArrowInfo, removeArrowBinding } from '../../shapes/connector/shared'
 
 /**
- * @alpha
+ * @public
  */
 export class ConnectorBindingUtil extends BindingUtil<ConnectorBinding> {
 	static override type = 'connector'

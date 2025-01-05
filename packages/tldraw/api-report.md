@@ -386,14 +386,14 @@ export function ClipboardMenuGroup(): JSX_2.Element;
 // @public (undocumented)
 export function CloudToolbarItem(): JSX_2.Element;
 
-// @alpha (undocumented)
+// @public (undocumented)
 export type CodeBlockShape = TLBaseShape<'codeBlock', {
     h: number;
     text: string;
     w: number;
 }>;
 
-// @alpha (undocumented)
+// @public (undocumented)
 export class CodeBlockShapeUtil extends BaseBoxShapeUtil<CodeBlockShape> {
     // (undocumented)
     component(shape: CodeBlockShape): JSX_2.Element;
@@ -411,7 +411,7 @@ export class CodeBlockShapeUtil extends BaseBoxShapeUtil<CodeBlockShape> {
     static type: string;
 }
 
-// @alpha (undocumented)
+// @public (undocumented)
 export class CodeBlockTool extends StateNode {
     // (undocumented)
     static children: () => never[];
@@ -466,7 +466,7 @@ export class ConnectableShapeUtil extends BaseBoxShapeUtil<ConnectableShape> {
     static type: "connectable";
 }
 
-// @alpha (undocumented)
+// @public (undocumented)
 export class ConnectableTool extends StateNode {
     // (undocumented)
     static children: () => never[];
@@ -482,7 +482,7 @@ export class ConnectableTool extends StateNode {
     shapeType: string;
 }
 
-// @alpha (undocumented)
+// @public (undocumented)
 export class ConnectorShapeUtil extends ShapeUtil<ConnectorShape> {
     // (undocumented)
     canBeLaidOut(shape: ConnectorShape): boolean;
